@@ -1,5 +1,9 @@
 .App {
-  width: 40%;
+  width: 360px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
   margin: 2em auto;
   background-color: #6B6D80;
   border-radius: 5px;
