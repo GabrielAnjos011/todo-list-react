@@ -151,7 +151,7 @@ export default function App() {
         {todos.map((todo) => (
           <div className="todo" key={todo.id}>
             <h3 className={todo.done ? "todo-done" : ""}>{todo.title}</h3>
-            <p>Duração: {todo.time} horas</p>
+            <p>Duração: {todo.time === 1 ? todo.time+" hora" : todo.time+" horas"} </p>
             <div className="actions">
               <span onClick={() => handleEdit(todo)}>
                 {!todo.done ? <BsBookmarkCheck /> : <BsBookmarkCheckFill />}
