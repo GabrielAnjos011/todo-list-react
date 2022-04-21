@@ -1,9 +1,17 @@
+import { useState, useEffect } from "react";
+import React from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { createClient } from '@supabase/supabase-js'
+import { BsTrash, BsBookmarkCheck, BsBookmarkCheckFill } from "react-icons/bs";
 import "./App.css";
 
-import { useState, useEffect } from "react";
-import { BsTrash, BsBookmarkCheck, BsBookmarkCheckFill } from "react-icons/bs";
 
-const API = "http://localhost:5000";
+// const API = "http://localhost:5000";
+const supabaseUrl = 'https://jgpiypbhvkheczuhcewj.supabase.co'
+// const supabaseKey = process.env.SUPABASE_KEY
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpncGl5cGJodmtoZWN6dWhjZXdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NTA1NDc0OTEsImV4cCI6MTk2NjEyMzQ5MX0.P4-BWd9-AgYdmqHBMWC7PDmMXahI40XZ_xiZCodMO60'
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default function App() {
   const [title, setTitle] = useState("");
@@ -14,12 +22,19 @@ export default function App() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const res = await fetch(API + "/todos")
-        .then((res) => res.json())
-        .then((data) => data)
-        .catch((err) => console.log(err));
+      //ROTA DO GET PARA USAR LOCAL
+      // const res = await fetch(API + "/todos")
+      //   .then((res) => res.json())
+      //   .then((data) => data)
+      //   .catch((err) => console.log(err));
+
+      //ROTA GET USANDO O SUPABASE
+      const { data: todos } = await supabase
+        .from('todos')
+        .select('*')
+
       setLoading(false);
-      setTodos(res);
+      setTodos(todos);
     };
     loadData();
   }, []);
@@ -33,35 +48,60 @@ export default function App() {
       time,
       done: false,
     };
-
-    await fetch(API + "/todos", {
-      method: "POST",
-      body: JSON.stringify(todo),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    //ROTA POST USANDO O SUPABASE
+    await supabase
+      .from('todos')
+      .insert(todo)
+    toast.success('Tarefa criada')
+    //ROTA POST PARA USAR LOCAL
+    // await fetch(API + "/todos", {
+    //   method: "POST",
+    //   body: JSON.stringify(todo),
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
     setTodos((prevState) => [...prevState, todo]);
     setTitle("");
     setTime("");
   };
 
   const handleDelete = async (id) => {
-    await fetch(API + "/todos/" + id, {
-      method: "DELETE",
-    });
+    //ROTA DELETE USANDO O SUPABASE
+    await supabase
+      .from('todos')
+      .delete(id)
+      .eq('id', id)
+    toast.success('Deletado com sucesso')
+    //ROTA DELETE PARA USAR LOCAL
+    // await fetch(API + "/todos/" + id, {
+    //   method: "DELETE",
+    // });
+
+    setTodos((prevState) => prevState.filter((todo) => todo.id !== id))
   };
 
   const handleEdit = async (todo) => {
     todo.done = !todo.done;
-
-    const data = await fetch(API + "/todos/" + todo.id, {
-      method: "PUT",
-      body: JSON.stringify(todo),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    //ROTA PUT USANDO O SUPABASE
+    const data = await supabase
+      .from('todos')
+      .update(todo)
+      .eq('id', todo.id)
+    if (todo.done) {
+      toast.success("Tarefa Concluida")
+    }
+    else {
+      toast.success("Tarefa não Concluida")
+    }
+    //ROTA PUT PARA USAR LOCAL
+    // const data = await fetch(API + "/todos/" + todo.id, {
+    //   method: "PUT",
+    //   body: JSON.stringify(todo),
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
 
     setTodos((prevState) =>
       prevState.map((t) => (t.id === data.id ? (t = data) : t))
@@ -75,7 +115,7 @@ export default function App() {
   return (
     <div className="App">
       <div className="todo-header">
-        <h1>React Todo</h1>
+        <h1>Lista de Tarefa</h1>
       </div>
       <div className="form-todo">
         <h2>Insira a sua proxima tarefa:</h2>
@@ -93,7 +133,7 @@ export default function App() {
             <div className="form-control">
               <label htmlFor="time">Duração:</label>
               <input
-                type="text"
+                type="number"
                 name="time"
                 placeholder="Tempo estimado (em horas)"
                 onChange={(e) => setTime(e.target.value)}
@@ -101,7 +141,7 @@ export default function App() {
                 required
               />
             </div>
-            <input type="submit" value="Criar tarefa" />
+            <input className="btn-submit" type="submit" value="Criar tarefa" />
           </div>
         </form>
       </div>
@@ -111,7 +151,7 @@ export default function App() {
         {todos.map((todo) => (
           <div className="todo" key={todo.id}>
             <h3 className={todo.done ? "todo-done" : ""}>{todo.title}</h3>
-            <p>Duração: {todo.time}</p>
+            <p>Duração: {todo.time} horas</p>
             <div className="actions">
               <span onClick={() => handleEdit(todo)}>
                 {!todo.done ? <BsBookmarkCheck /> : <BsBookmarkCheckFill />}
@@ -121,6 +161,7 @@ export default function App() {
           </div>
         ))}
       </div>
+      <ToastContainer />
     </div>
   );
 }
