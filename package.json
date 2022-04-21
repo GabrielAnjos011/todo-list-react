@@ -1,6 +1,6 @@
 {
   "name": "todolist",
-  "home": "todo-list-react/",
+  "homepage": "todo-list-react/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
